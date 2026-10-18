@@ -1,0 +1,107 @@
+﻿@page "/"
+@page "/inventario"
+@rendermode InteractiveServer
+@using BlazorApp1.modelos
+@using BlazorApp1.servicios
+@inject InventarioService ServicioInventario
+
+<div class="container mt-4">
+    <h2 class="text-primary">Gestión de Inventario y Reportes</h2>
+
+    <!-- PANEL DE REPORTES -->
+    <div class="row my-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Ganancia Bruta (Hoy)</h5>
+                    <h3>$@ServicioInventario.ObtenerGananciaBrutaDiaria(DateTime.Now).ToString("N2")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Ganancia Limpia (Hoy)</h5>
+                    <h3>$@ServicioInventario.ObtenerGananciaNetaDiaria(DateTime.Now).ToString("N2")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-secondary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Ganancia Bruta (Mes)</h5>
+                    <h3>$@ServicioInventario.ObtenerGananciaBrutaMensual(DateTime.Now.Month, DateTime.Now.Year).ToString("N2")</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-dark mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Ganancia Limpia (Mes)</h5>
+                    <h3>$@ServicioInventario.ObtenerGananciaNetaMensual(DateTime.Now.Month, DateTime.Now.Year).ToString("N2")</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr />
+
+    <!-- SECCIÓN PARA VENDER -->
+    <h4>Simular una Venta</h4>
+    <div class="d-flex gap-2 mb-4">
+        <select class="form-select w-25" @bind="productoSeleccionadoId">
+            <option value="0">Seleccione un producto...</option>
+            @foreach (var prod in ServicioInventario.Productos)
+            {
+                <option value="@prod.Id">@prod.Nombre ($@prod.PrecioVenta)</option>
+            }
+        </select>
+        
+        <input type="number" class="form-control w-25" @bind="cantidadAVender" min="1" placeholder="Cantidad" />
+        
+        <button class="btn btn-primary" @onclick="ProcesarVenta">Registrar Venta</button>
+    </div>
+
+    <!-- TABLA DE PRODUCTOS E INVENTARIO -->
+    <h4>Inventario Actual</h4>
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Producto</th>
+                <th>Costo (Compra)</th>
+                <th>Precio (Venta)</th>
+                <th>Margen Unitario</th>
+                <th>Stock Disponible</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var producto in ServicioInventario.Productos)
+            {
+                <tr>
+                    <td>@producto.Nombre</td>
+                    <td>$@producto.PrecioCompra</td>
+                    <td>$@producto.PrecioVenta</td>
+                    <td class="text-success"><strong>$@(producto.PrecioVenta - producto.PrecioCompra)</strong></td>
+                    <td>@producto.Stock</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    // Variables para la interfaz
+    private int productoSeleccionadoId = 0;
+    private int cantidadAVender = 1;
+
+    private void ProcesarVenta()
+    {
+        if (productoSeleccionadoId > 0 && cantidadAVender > 0)
+        {
+            ServicioInventario.RegistrarVenta(productoSeleccionadoId, cantidadAVender);
+            // Reiniciamos los campos
+            productoSeleccionadoId = 0;
+            cantidadAVender = 1;
+        }
+    }
+}
